@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text, Image, ScrollView } from 'react-native';
 import { createStyles } from './styles';
 import { useTheme } from '../../global/themes';
+import { useRoute } from '@react-navigation/native';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../routes';
 
 const MOCK_POKEMON_DETAIL = {
   id: 25,
@@ -24,9 +27,14 @@ export default function PokemonDetailScreen() {
   const pokemon = MOCK_POKEMON_DETAIL;
   const theme = useTheme();
   const styles = createStyles(theme);
+  const route = useRoute<RouteProp<RootStackParamList, 'PokemonDetail'>>();
+  const {id} = route.params;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.sectionText}>
+        ID INFORMADO: {id}
+      </Text>
       <View style={styles.header}>
         <View style={styles.nameRow}>
           <Text style={styles.name}>{pokemon.name}</Text>

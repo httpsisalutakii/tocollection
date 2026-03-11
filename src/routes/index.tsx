@@ -7,15 +7,17 @@ import PokemonDetailScreen from "../pages/PokemonDetail";
 export type RootStackParamList = {
     Login: undefined;
     PokemonList: undefined;
+    PokemonDetail: {id: number};
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator(){
     return (
-        <Stack.Navigator initialRouteName="Login">
+        <Stack.Navigator initialRouteName="Login" screenOptions={{headerShown: false}}>
             <Stack.Screen name = "Login" component={LoginScreen}/>
             <Stack.Screen name = "PokemonList" component={PokemonListScreen}/>
+            <Stack.Screen name = "PokemonDetail" component={PokemonDetailScreen}/>
         </Stack.Navigator>
     )
     
