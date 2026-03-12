@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, Button } from 'react-native';
 import { createStyles } from './styles';
 import { useTheme } from '../../global/themes';
 import { useNavigation } from '@react-navigation/native';
@@ -38,6 +38,13 @@ export default function PokemonListScreen() {
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'PokemonList'>>();
+  
+  const handleLogout = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{name: "Login"}],
+    })
+};
 
   const renderItem = ({ item }: { item: PokemonListItem }) => (
     <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={()=> navigation.navigate('PokemonDetail', {id: item.id})}>
@@ -58,6 +65,9 @@ export default function PokemonListScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.headerTitle}>Pokédex</Text>
+      <TouchableOpacity style={styles.buttonLogOut} onPress={handleLogout}>
+        <Text style={styles.logOutText}>Logout</Text>
+      </TouchableOpacity>
       <FlatList
         data={MOCK_POKEMON_LIST}
         keyExtractor={(item) => String(item.id)}

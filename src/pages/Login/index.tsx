@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Logo from '../../assets/logo.png';
 import { createStyles } from './styles';
 import { useTheme } from '../../global/themes';
@@ -13,12 +13,22 @@ export default function LoginScreen() {
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Login'>>();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = () => {
-    // Integração de autenticação será adicionada futuramente
+    setIsLoading(true);
+
+    setTimeout(() => {
     console.log('Login action', { email, password });
-    navigation.navigate('PokemonList');
+    navigation.reset({
+      index: 0,
+      routes: [{name: "PokemonList"}],
+    })
+    setIsLoading(false);
+    }, 1500)
   };
+
+  const isButtonDisabled = isLoading || !email || !password;
 
   return (
     <View style={styles.container}>
@@ -51,9 +61,10 @@ export default function LoginScreen() {
       </View>        
       </View>
       <View style={styles.boxBottom}>
-      <TouchableOpacity style={styles.buttonEntrar} onPress={handleLogin}>
+      <TouchableOpacity style={[styles.buttonEntrar, isButtonDisabled && {opacity:0.7}]} onPress={handleLogin} disabled={isButtonDisabled}>
+            { isLoading ? <ActivityIndicator color={theme.colors.text}/> :
           <Text style={styles.buttonEntrarText}>Entrar</Text>
-        </TouchableOpacity>
+            }</TouchableOpacity>
       </View>
     </View>
   );

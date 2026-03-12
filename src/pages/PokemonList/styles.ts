@@ -65,5 +65,12 @@ export const createStyles = (theme: Theme) =>
       width: 72,
       height: 72,
     },
+    buttonLogOut:{
+      backgroundColor: 'pink',
+    },
+
+    logOutText:{
+      color: theme.colors.text,
+    }
   });
 
