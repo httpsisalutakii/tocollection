@@ -5,58 +5,85 @@ import { useTheme } from '../../global/themes';
 import { useRoute } from '@react-navigation/native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../routes';
-import { clear } from 'node:console';
+//import { clear } from 'node:console';
+import { fetchPokemonDetail, fetchPokemonSpecies, type PokemonDetailResponse, type PokemonSpeciesResponse,  } from '../../services/pokeapi';
 
-const MOCK_POKEMON_DETAIL = {
-  id: 25,
-  name: 'pikachu',
-  imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png',
-  types: ['electric'],
-  height: 4,
-  weight: 60,
-  stats: [
-    { name: 'hp', value: 35 },
-    { name: 'attack', value: 55 },
-    { name: 'defense', value: 40 },
-    { name: 'speed', value: 90 },
-  ],
-  description:
-    'Whenever Pikachu comes across something new, it blasts it with a jolt of electricity. If you come across a blackened berry, it is evidence that this Pokémon mistook the intensity of its charge.',
-};
+//const MOCK_POKEMON_DETAIL = {
+//  id: 25,
+//  name: 'pikachu',
+//  imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png',
+//  types: ['electric'],
+//  height: 4,
+//  weight: 60,
+//  stats: [
+//    { name: 'hp', value: 35 },
+//    { name: 'attack', value: 55 },
+//    { name: 'defense', value: 40 },
+//    { name: 'speed', value: 90 },
+//  ],
+//  description:
+//    'Whenever Pikachu comes across something new, it blasts it with a jolt of electricity. If you come across a blackened berry, it is evidence that this Pokémon mistook the intensity of its charge.',
+//};
 
-type PokemonDetailState = typeof MOCK_POKEMON_DETAIL;
+//type PokemonDetailState = typeof MOCK_POKEMON_DETAIL;
 
 export default function PokemonDetailScreen() {
-  const pokemon = MOCK_POKEMON_DETAIL;
+//  const pokemon = MOCK_POKEMON_DETAIL;
   const theme = useTheme();
   const styles = createStyles(theme);
   const route = useRoute<RouteProp<RootStackParamList, 'PokemonDetail'>>();
   const {id} = route.params;
 
-  const [pokemons, setPokemons] = useState<PokemonDetailState | null>(null);
+  const [pokemon, setPokemon] = useState<PokemonDetailResponse | null>(null);
+  const [description, setDescription] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() =>{
-    setIsLoading(true);
-    setError(null);
+function getPokemonDescriptionFromSpecies(
+  species: PokemonSpeciesResponse,
+): string | null {
+  const ptEntry = species.flavor_text_entries.find(
+    (entry) => entry.language.name === 'pt-BR'
+  );
+  if (ptEntry) {
+    return ptEntry.flavor_text.replace(/\s+/g, ' ').replace(/\f/g, ' ').trim();
+  }
+  const enEntry = species.flavor_text_entries.find(
+    (entry) => entry.language.name === 'en',
+  );
+  if (enEntry) {
+    return enEntry.flavor_text.replace(/\s+/g, ' ').replace(/\f/g, ' ').trim();
+  }
+  return null;
+}
 
-    const timer = setTimeout(() =>{
+  useEffect(() =>{
+    const controller = new AbortController();
+
+    async function loadPokemon() {
       try {
-        setPokemons({
-          ...MOCK_POKEMON_DETAIL,
-          id
-        })
-      } catch (error){
-        setError('Não foi possível trazer os dados da comunidade!');
-      } finally {
+        setIsLoading(true);
+        setError(null);
+
+        const [detail, species] = await Promise.all([
+          fetchPokemonDetail(id, {signal: controller.signal}),
+          fetchPokemonSpecies(id, {signal: controller.signal}),
+        ]);
+
+        setPokemon(detail);
+        setDescription(getPokemonDescriptionFromSpecies(species));
+      } catch (e){
+        if ((e as Error).name !== 'AbortError'){
+          setError('Não foi possivel carregar os dados do pokemon');
+        }
+      } finally{
         setIsLoading(false);
       }
-    }, 1200);
-
-    return () => {
-      clearTimeout(timer);
     }
+
+    loadPokemon();
+
+    return () => {controller.abort();};
   }, [id]);
 
 if (isLoading) {
@@ -69,7 +96,7 @@ if (isLoading) {
   }
 
 
-  if (error || !pokemons) {
+  if (error || !pokemon) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={{ color: theme.colors.text, marginBottom: 16 }}>
@@ -102,20 +129,22 @@ if (isLoading) {
         </View>
 
         <View style={styles.typeContainer}>
-          {pokemon.types.map((type) => (
-            <View key={type} style={styles.typeBadge}>
-              <Text style={styles.typeText}>{type}</Text>
+          {pokemon.types.map(({type}) => (
+            <View key={type.name} style={styles.typeBadge}>
+              <Text style={styles.typeText}>{type.name}</Text>
             </View>
           ))}
         </View>
 
-        <Image source={{ uri: pokemon.imageUrl }} style={styles.image} />
+          {pokemon.sprites.front_default ? 
+        (<Image source={{ uri: pokemon.sprites.front_default }} style={styles.image} />):
+        null}
       </View>
 
-      <View style={styles.section}>
+      *<View style={styles.section}>
         <Text style={styles.sectionTitle}>Sobre</Text>
-        <Text style={styles.sectionText}>{pokemon.description}</Text>
-      </View>
+        <Text style={styles.sectionText}>{description ?? 'Descrição não disponível'}</Text>
+      </View>*
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Informações básicas</Text>
@@ -132,9 +161,9 @@ if (isLoading) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Stats base</Text>
         {pokemon.stats.map((stat) => (
-          <View key={stat.name} style={styles.statRow}>
-            <Text style={styles.statName}>{stat.name.toUpperCase()}</Text>
-            <Text style={styles.statValue}>{stat.value}</Text>
+          <View key={stat.stat.name} style={styles.statRow}>
+            <Text style={styles.statName}>{stat.stat.name.toUpperCase()}</Text>
+            <Text style={styles.statValue}>{stat.base_stat}</Text>
           </View>
         ))}
       </View>

@@ -1,3 +1,5 @@
+import { StatementResultingChanges } from "node:sqlite";
+
 const BASE_URL = 'https://pokeapi.co/api/v2';
 
 type FetchOptions = {
@@ -70,4 +72,35 @@ export async function fetchPokemonDetail(
 
   return response.json();
 }
+
+export type PokemonSpeciesResponse = {
+  flavor_text_entries:{
+    flavor_text: String;
+    language: {
+      name: String;
+      url: string;
+    };
+    version:{
+      name: String;
+      url: string;
+    }
+  }[];
+}
+
+export async function fetchPokemonSpecies(
+    nameOrId: string | number,
+  options?: FetchOptions,
+): Promise<PokemonSpeciesResponse>{
+  const url = `${BASE_URL}/pokemon-speceis/${nameOrId}`;
+  const response = await fetch(url, {signal: options?.signal});
+
+  if(!response.ok){
+    throw new Error ('Falha ao buscar informações da espécie de pokemon');
+  }
+  return response.json();
+
+}
+
+
+  
 
