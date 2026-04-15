@@ -31,42 +31,64 @@ export async function fetchPokemonList(
   return response.json();
 }
 
-export type PokemonListItemUI= {
-  id: number,
-  name: string,
-  imageUrl: string,
+export type PokemonListItemUI = {
+  id: number;
+  name: string;
+  imageUrl: string;
+  types: string[];
 };
 
-function extractPokemon(url: string): number{
+type PokemonDetailListItemResponse = {
+  id: number;
+  name: string;
+  sprites: {
+    front_default: string | null;
+  };
+  types : {
+    slot: number;
+    type: {
+      name: string;
+      url: string;
+    }
+  } []
+}
+
+function extractIdPokemon(url: string): number {
   const parts = url.split('/').filter(Boolean);
   return Number(parts[parts.length - 1]);
 }
 
 export async function fetchPokemonListPage(
-  limit = 20,
+  limit = 10,
   offset = 0,
   options?: FetchOptions
 ): Promise<{
   items: PokemonListItemUI[];
   count: number;
   next: string | null;
-}>{
+}> {
   const data = await fetchPokemonList(limit, offset, options);
 
-  const items = data.results.map((pokemon)=>{
-    const id = extractPokemon(pokemon.url);
+  const details = await Promise.all(
+    data.results.map(async(pokemon) => {
+      const response = await fetch(pokemon.url, { signal: options?.signal })
+      if (!response.ok) {
+        throw new Error(`Falha ao buscar detalhes de ${pokemon.name}`);
+      }
+      return (await response.json()) as PokemonDetailListItemResponse;
+    }),
+  );
 
-    return {
-      id,
-      name: pokemon.name,
-      imageUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`
-    }
-  });
-
-  return {
+  const items: PokemonListItemUI[] = details.map((detail) =>({
+    id: detail.id,
+    name: detail.name,
+    imageUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${detail.id}.png`,
+    types: detail.types.map((t) => t.type.name),
+  }))
+  return{
     items,
     count: data.count,
-    next: data.next
+    next: data.next,
   }
 }
 
@@ -113,33 +135,29 @@ export async function fetchPokemonDetail(
 }
 
 export type PokemonSpeciesResponse = {
-  flavor_text_entries:{
-    flavor_text: String;
+  flavor_text_entries: {
+    flavor_text: string;
     language: {
-      name: String;
+      name: string;
       url: string;
     };
-    version:{
-      name: String;
+    version: {
+      name: string;
       url: string;
-    }
+    };
   }[];
-}
+};
 
 export async function fetchPokemonSpecies(
     nameOrId: string | number,
   options?: FetchOptions,
-): Promise<PokemonSpeciesResponse>{
-  const url = `${BASE_URL}/pokemon-speceis/${nameOrId}`;
-  const response = await fetch(url, {signal: options?.signal});
+): Promise<PokemonSpeciesResponse> {
+  const url = `${BASE_URL}/pokemon-species/${nameOrId}`;
+  const response = await fetch(url, { signal: options?.signal });
 
-  if(!response.ok){
-    throw new Error ('Falha ao buscar informações da espécie de pokemon');
+  if (!response.ok) {
+    throw new Error('Falha ao buscar informações da espécie do Pokémon');
   }
+
   return response.json();
-
 }
-
-
-  
-

@@ -94,6 +94,6 @@ export const createStyles = (theme: Theme) =>
       fontSize: 14,
       fontWeight: '600',
       color: theme.colors.text,
-    },
+    }
   });
 
