@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Share } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Share, Button } from 'react-native';
 import { createStyles } from './styles';
 import { useTheme } from '../../global/themes';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../routes';
 import {
@@ -12,6 +12,7 @@ import {
  type PokemonSpeciesResponse
 } from '../../services/pokeapi';
 import { isFavorite, toggleFavorite } from '../../services/favoritesStorage';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const TYPE_COLORS: Record<string, string> = {
  normal: '#A8A77A',
@@ -51,6 +52,13 @@ export default function PokemonDetailScreen() {
 
  const [favorite, setFavorite] = useState(false);
  const [favoriteLoading, setFavoriteLoading] = useState(true);
+
+ const [photoUri, setPhotoResult] = useState(null);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'PokemonDetail'>>();
+
+  function handleOpenCamera() {
+  navigation.navigate('PokemonCamera', { id });
+  }
 
  function getPokemonDescriptionFromSpecies(
    species: PokemonSpeciesResponse,
@@ -206,6 +214,22 @@ try {
          (<Image source={{ uri: pokemon.sprites.front_default }} style={styles.image} />) :
          null}
      </View>
+
+      <View style={{ flex: 1, alignItems: 'center' }}>
+      <Text>Detalhes do Pokémon</Text>
+
+      {photoUri && (
+        <Image
+          source={{ uri: photoUri }}
+          style={{ width: 200, height: 200, marginTop: 20 }}
+        />
+      )}
+
+      <Button
+        title="Abrir câmera"
+        onPress={() => navigation.navigate('Camera', {onGoBack: (uri) => setPhotoResult(uri),})}
+      />
+    </View>
     
      <TouchableOpacity
        onPress={handleToggleFavorite}
@@ -237,6 +261,21 @@ try {
       >
         <Text style={{ fontWeight: '700', color: '#fff' }}>Compartilhar</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+  onPress={handleOpenCamera}
+  style={{
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  }}
+>
+  <Text style={{ fontWeight: '700', color: '#fff' }}>Abrir câmera</Text>
+</TouchableOpacity>
+
 
      <View style={styles.section}>
        <Text style={styles.sectionTitle}>Sobre</Text>
