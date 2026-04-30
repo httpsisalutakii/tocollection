@@ -6,6 +6,7 @@ import { useTheme } from '../../global/themes';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../routes';
+import {validateUser} from '../../services/authSqlite'
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -14,18 +15,31 @@ export default function LoginScreen() {
   const styles = createStyles(theme);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Login'>>();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = () => {
     setIsLoading(true);
+    setErrorMessage('');
 
-    setTimeout(() => {
-    console.log('Login action', { email, password });
-    navigation.reset({
-      index: 0,
-      routes: [{name: "PokemonList"}],
-    })
-    setIsLoading(false);
-    }, 1500)
+    try{
+      const Isvalid = validateUser(email.trim().toLowerCase, senha.trim());
+
+      if (!Isvalid){
+        setErrorMessage('e-mail ou senha inválidos');
+        setIsLoading(false);
+        setPassword('');
+        return;
+      }
+
+      navigation.reset({
+        index: 0,
+        routes:[{name: 'PokemonList'}]
+      })
+    } catch (error){
+      setErrorMessage("Ocorrreu um erro ao consular o banco");
+    }finally{
+      setIsLoading(false);
+    }
   };
 
   const isButtonDisabled = isLoading || !email || !password;
@@ -65,6 +79,7 @@ export default function LoginScreen() {
             { isLoading ? <ActivityIndicator color={theme.colors.text}/> :
           <Text style={styles.buttonEntrarText}>Entrar</Text>
             }</TouchableOpacity>
+            {errorMessage ?<Text style={{color: 'red', marginTop:8}}>{errorMessage}</Text>: null}
       </View>
     </View>
   );
