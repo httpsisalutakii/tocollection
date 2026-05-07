@@ -42,29 +42,29 @@ export default function PokemonCameraScreen() {
 
 type CameraRouteProp = RouteProp<RootStackParamList, 'PokemonCamera'>;
 
-//export default function CameraScreen({ navigation, route }) {
-  //navigation,
-  //route,
-//}: {
-  //navigation: NavigationProp;
-  //route: CameraRouteProp;
+export default function CameraScreen({ navigation, route }) {
+  navigation,
+  route,
+}: {
+  navigation: NavigationProp;
+  route: CameraRouteProp;
 } {
   
   async function takePhoto() {
-    //if (cameraRef.current) {
-      //const photo = await cameraRef.current.takePictureAsync();
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
 
-      // (route.params as any)?.onGoBack?.(photo.uri);
+      (route.params as any)?.onGoBack?.(photo.uri);
       ;
     }
   }
-//}
+}
   async function handleTakePhoto() {
     const photo = await cameraRef.current?.takePictureAsync({
       quality: 0.7,
       skipProcessing: true,
-      // exif: true,   // descomente se quiser ver metadata
-      // base64: true, // evite no começo (objeto fica enorme)
+      xif: true, 
+      base64: true,
     });
 
     if (photo) {

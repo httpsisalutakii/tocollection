@@ -13,6 +13,7 @@ import {
 } from '../../services/pokeapi';
 import { isFavorite, toggleFavorite } from '../../services/favoritesStorage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { notifyPokemonFavorited } from '../../services/localnotifications';
 
 const TYPE_COLORS: Record<string, string> = {
  normal: '#A8A77A',
@@ -88,8 +89,13 @@ export default function PokemonDetailScreen() {
        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`,
      types: pokemon.types.map((t) => t.type.name),
    };
+   const isNowFavorite = updated.some((item) => item.id == pokemon.id);
    const updated = await toggleFavorite(summary);
    setFavorite(updated.some((item) => item.id === pokemon.id));
+
+   if (isNowFavorite){
+    await notifyPokemonFavorited(pokemon.name);
+   }
  }
 
 async function handleSharePokemon() {

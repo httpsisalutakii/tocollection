@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
 import LoginScreen from './src/pages/Login';
@@ -8,11 +8,20 @@ import AppNavigator from './src/routes';
 import { NavigationContainer } from '@react-navigation/native';
 import { initDatabase } from './src/database/init';
 import { seeduser } from './src/database/seeduser';
+import { setupNotificationHandler, configureAndroidChannel, requestNotificationPermission } from './src/services/localnotifications';
 
 initDatabase();
 seeduser();
 
 export default function App() {
+  useEffect(() => {
+    setupNotificationHandler();
+
+    (async() => {
+      await configureAndroidChannel();
+      await requestNotificationPermission();
+    })();
+  },[]);
   return (
     <NavigationContainer>
       <StatusBar style="dark" />
